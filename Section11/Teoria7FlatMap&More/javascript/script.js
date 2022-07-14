@@ -75,10 +75,13 @@ const inputClosePin = document.querySelector('.form__input--pin');
 
 /////////////////////////////////////////////////
 
-const displayMovements = function (movements) {
+const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = '';
 
-  movements.forEach(function (mov, i) {
+  //Si SORT es TRUE, realizamos una copia del array y lo ordenamos (ASC)
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+
+  movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
 
     const html = `<div class="movements__row">
@@ -273,7 +276,6 @@ btnLoan.addEventListener('click', function (e) {
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // -------------------------------------------------- THE FINDINDEX METHOD
-//console.log('------------ THE FINDINDEX METHOD ------------');
 
 //Sirve para obtener el indice de un elemento dentro de un array
 
@@ -298,6 +300,26 @@ btnClose.addEventListener('click', function (e) {
   inputCloseUsername.value = inputClosePin.value = '';
 });
 
+let sorted = false;
+
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovements(currentAccount.movements, !sorted);
+  sorted = !sorted;
+});
+
+labelBalance.addEventListener('click', function () {
+  //querySelectorAll => NO ES UN ARRAY, es una NodeList() con forma de array
+  //Convertimos en un array el querySelector y le aplicamos como segundo argumento del from la función callback
+  const movementsUI = Array.from(
+    document.querySelectorAll('.movements__value'),
+    ele => Number(ele.textContent.replace('€', ''))
+  );
+  console.log(movementsUI);
+  //Esta forma también convierte en array (mediante la deconstrucción)
+  const movementsUI2 = [...document.querySelectorAll('.movements__value')];
+});
+
 // -------------------------------------------------- THE SOME METHOD
 // console.log(movements);
 // console.log('------------ THE SOME METHOD ------------');
@@ -309,14 +331,80 @@ btnClose.addEventListener('click', function (e) {
 // //Devuelve TRUE si encuentra alguna coincidencia exacta
 // const include = movements.includes(-130);
 // console.log(include);
-console.log('------------ THE EVERY METHOD ------------');
+// console.log('------------ THE EVERY METHOD ------------');
+// console.log('------------ THE EVERY METHOD ------------');
 //Solo devuelve TRUE si TODOS los elementos del Array cumplen la condición que le pasamos
-console.log(movements.every(mov => mov > 0)); //Devuelve FALSE
-console.log(account4.movements.every(mov => mov > 0)); //Devuelve TRUE (esta cuenta solo tiene ingresos, asique todos los movimientos cumplen la condición)
+// console.log(movements.every(mov => mov > 0)); //Devuelve FALSE
+// console.log(account4.movements.every(mov => mov > 0)); //Devuelve TRUE (esta cuenta solo tiene ingresos, asique todos los movimientos cumplen la condición)
 
 //Separate Callback
 
-const deposit = mov => mov > 0;
-console.log(movements.some(deposit));
-console.log(movements.every(deposit));
-console.log(movements.filter(deposit));
+// const deposit = mov => mov > 0;
+// console.log(movements.some(deposit));
+// console.log(movements.every(deposit));
+// console.log(movements.filter(deposit));
+
+// console.log('------------ THE FLAT METHOD ------------');
+// // El método flat borra los arrays anidados y los "une" al array padre
+// // Por defecto solo baja un primer nivel (flat(1)), pero le podemos pasar por parámetros hasta dónde queremos que baje
+// const arr = [[1, 2, 3], [4, 5, 6], 7, 8];
+// console.log(arr.flat());
+
+// const arrDeep = [[[1, 2], 3], [4, [5, 6]], 7, 8];
+// console.log(arrDeep.flat(2));
+
+// const accountMovements = accounts.map(acc => acc.movements); //De esta forma podemos crear un array con los valores de otros arrays anidados
+// //console.log(accountMovements); // Un array de arrays con los movimientos
+// const allMovements = accountMovements.flat(); //Ahora tenemos en un único array todos los valores juntos
+
+// const overalBalance = allMovements.reduce((acc, mov) => acc + mov, 0); // Aplicando reduce conseguimos la suma de todos los valores
+// console.log(overalBalance); // 17840
+// //Vamos a unir todos los pasos anteriores en uno solo
+// const overalBalance2 = accounts
+//   .map(acc => acc.movements)
+//   .flat()
+//   .reduce((acc, mov) => acc + mov, 0);
+// console.log(overalBalance2); // 17840
+
+// // console.log('------------ THE FLATMAP METHOD ------------');
+// // Combina los dos métodos (flat() y map()) en uno solo
+// // Mejor para la performance
+// // flatMap() solo puede bajar 1 nivel de profundidad, si necesitas bajar más hay que usar el flat()
+
+// const overalBalance3 = accounts
+//   .flatMap(acc => acc.movements)
+//   .reduce((acc, mov) => acc + mov, 0);
+// console.log(overalBalance3); // 17840
+// console.log('--------- SORTING ARRAYS ----------');
+// // Array Strings
+// const owners = ['Jonas', 'Zach', 'Adam', 'Martha'];
+// console.log(owners);
+// console.log(owners.sort()); //Ordena el array alfabéticamente por defecto (lo muta!!, modifica las posiciones)
+// console.log(owners);
+
+// //Numbers
+// console.log(movements);
+// //console.log(movements.sort()); // No lo ordena, lo convierte en Strings y lo ordena como si fueran Strings
+// // Para ordena de manera ASCENDENTE el array se hace asi
+// // a => currentValue
+// // b => nextValue
+// // Si devuelve < 0, lo ordena A, B
+// // Si devuelve > 0, lo ordena B, A
+// movements.sort((a, b) => {
+//   if (a > b) return 1;
+
+//   if (b > a) return -1;
+// });
+// console.log(movements); // ASC
+// // Ordenamos de manera DESCENDENTE
+// movements.sort((a, b) => {
+//   if (a < b) return 1;
+//   if (a > b) return -1;
+// });
+// console.log(movements); // DESC
+
+// // Una forma MÁS SIMPLE
+// movements.sort((a, b) => a - b);
+// console.log(movements); // ASC
+// movements.sort((a, b) => b - a);
+// console.log(movements); // DESC

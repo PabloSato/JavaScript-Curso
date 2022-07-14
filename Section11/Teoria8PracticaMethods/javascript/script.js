@@ -75,10 +75,13 @@ const inputClosePin = document.querySelector('.form__input--pin');
 
 /////////////////////////////////////////////////
 
-const displayMovements = function (movements) {
+const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = '';
 
-  movements.forEach(function (mov, i) {
+  //Si SORT es TRUE, realizamos una copia del array y lo ordenamos (ASC)
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+
+  movs.forEach(function (mov, i) {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
 
     const html = `<div class="movements__row">
@@ -273,7 +276,6 @@ btnLoan.addEventListener('click', function (e) {
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // -------------------------------------------------- THE FINDINDEX METHOD
-//console.log('------------ THE FINDINDEX METHOD ------------');
 
 //Sirve para obtener el indice de un elemento dentro de un array
 
@@ -298,25 +300,122 @@ btnClose.addEventListener('click', function (e) {
   inputCloseUsername.value = inputClosePin.value = '';
 });
 
-// -------------------------------------------------- THE SOME METHOD
-// console.log(movements);
-// console.log('------------ THE SOME METHOD ------------');
-// //Devuelve TRUE si encuentra alguna coincidencia a una CONDICIÓN
-// //Si queremos saber, por ejemplo, si hay algun movimiento sobre 0 en este array usamos el método some()
-// const anyDeposits = movements.some(mov => mov > 0); // Nos devuelve TRUE o FALSE
-// console.log(anyDeposits);
-// console.log('------------ THE INCLUDES METHOD ------------');
-// //Devuelve TRUE si encuentra alguna coincidencia exacta
-// const include = movements.includes(-130);
-// console.log(include);
-console.log('------------ THE EVERY METHOD ------------');
-//Solo devuelve TRUE si TODOS los elementos del Array cumplen la condición que le pasamos
-console.log(movements.every(mov => mov > 0)); //Devuelve FALSE
-console.log(account4.movements.every(mov => mov > 0)); //Devuelve TRUE (esta cuenta solo tiene ingresos, asique todos los movimientos cumplen la condición)
+let sorted = false;
 
-//Separate Callback
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovements(currentAccount.movements, !sorted);
+  sorted = !sorted;
+});
 
-const deposit = mov => mov > 0;
-console.log(movements.some(deposit));
-console.log(movements.every(deposit));
-console.log(movements.filter(deposit));
+labelBalance.addEventListener('click', function () {
+  //querySelectorAll => NO ES UN ARRAY, es una NodeList() con forma de array
+  //Convertimos en un array el querySelector y le aplicamos como segundo argumento del from la función callback
+  const movementsUI = Array.from(
+    document.querySelectorAll('.movements__value'),
+    ele => Number(ele.textContent.replace('€', ''))
+  );
+  console.log(movementsUI);
+  //Esta forma también convierte en array (mediante la deconstrucción)
+  const movementsUI2 = [...document.querySelectorAll('.movements__value')];
+});
+
+// -------------------------------------------------- PRACTICA METHODS
+
+// 1. Cuánto dinero hay depositado en TOTAL en el banco (sumando el de todas las cuentas)
+
+// A - Usaremos el método map() ya que queremos crear un nuevo array a partir del array de accounts
+//      En ese nuevo array guardaremos los movimientos (que a su vez son arrays) de todas las cuentas (accounts.movements)
+// B - Para sacar los valores de esos arrays anidados y unirlos en el array padre, usaremos el método flat()
+const bankDepositSum0 = accounts.map(acc => acc.movements).flat();
+// C - Para simplificar el código, combinaremos A y B usando el método flatMap()
+// D - Como queremos sólo los valores positivos, usaremos el método filter() para filtrar el array
+// E - Para quedarnos con la suma total de todos los elementos que tenemos ahora en el arry usaremos el método reduce()
+//     Pasamos 2 valores a la funcion
+//      - sum : previousValue
+//      - cur: currentValue
+//       El 0 indica el valor inicial
+const bankDepositSum1 = accounts
+  .flatMap(acc => acc.movements)
+  .filter(mov => mov > 0)
+  .reduce((sum, cur) => sum + cur, 0); //La suma total es 25180;
+
+console.log(bankDepositSum1);
+
+// 2. Cuántos depósitos hay en el banco con al menos $1.000
+
+// --- Primera Forma de Hacerlo ---
+// A - Usamos el método faltMap() para unir todos los movimientos en el mismo array
+// B - Filtramos (filter()) el array para quedarnos con todos los movimientos >= a 1000
+// C - Al querer solo la cantidad de depósitos, usamos length
+const numDeposits1000a = accounts
+  .flatMap(acc => acc.movements)
+  .filter(mov => mov >= 1000).length;
+
+// --- Segunda Forma de Hacerlo ---
+// A - En este método usaremos el reduce() para que nos devuelva el acumulador
+const numDeposits1000b = accounts
+  .flatMap(acc => acc.movements)
+  .reduce((sum, cur) => (cur >= 1000 ? ++sum : sum), 0);
+
+console.log(numDeposits1000b); // La cantidad de depósitos es 6;
+
+// 3. Crear un objeto que contenga la suma de los depósitos y la suma de las retiradas
+
+// A - En este caso el valor inicial no es 0, sino el objeto dónde vamos a guardar los sumatorios
+//      En este caso "sum" es lo mismo que el valor inicial, es decir, sum es igual al objeto
+//      Si el currentValue es mayor que cero lo sumas a depositos, sino (si es menor que cero) lo sumas a retiradas
+// B - Con reduce() se debe devolver siempre el valor, si no tiene {} (cuerpo de función) el método lo devuelve por defecto
+//      Pero en este caso si que tiene body, por lo que tenemos que devolver explicitamente
+const sums = accounts
+  .flatMap(acc => acc.movements)
+  .reduce(
+    (sum, cur) => {
+      cur > 0 ? (sum.deposits += cur) : (sum.withdrawals += cur);
+      return sum;
+    },
+    { deposits: 0, withdrawals: 0 }
+  );
+console.log(sums); // {deposits: 25180, withdrawals: -7340}
+
+// C - También podemos deconstruir el objeto y que nos devuelva dos variables con los datos
+const { deposits1, withdrawals1 } = accounts
+  .flatMap(acc => acc.movements)
+  .reduce(
+    (sum, cur) => {
+      // cur > 0 ? (sum.deposits1 += cur) : (sum.withdrawals1 += cur);
+      //Hay una forma más mimim de hacer esto mismo que es:
+      sum[cur > 0 ? 'deposits1' : 'withdrawals1'] += cur;
+      return sum;
+    },
+    { deposits1: 0, withdrawals1: 0 }
+  );
+console.log(deposits1); // 25180
+console.log(withdrawals1); // -7340
+
+// 4. Convertir cualquier String a Title Case (this is a nice title => This Is a Nice Title)
+
+const convertTitleCase = function (title) {
+  const capitalize = str => str[0].toUpperCase() + str.slice(1);
+
+  const exceptions = ['a', 'an', 'and', 'the', 'but', 'or', 'on', 'in', 'with'];
+
+  // A - Primero convertimos todo a lowerCase
+  // B - Separamos el string por palabras para trabajar con cada individualmente
+  // C - Comprobamos si la palabra está en el array de excepciones, si lo está no la tratamos
+  // D - Creamos un nuevo array con map() y capitalizamos la primera letra de cada palabra que no esté en exceptions
+  //(Necesitamos crear un nuevo array porque no podemos modificar el String?)
+  // E - Unimos todas las palabras en una oración
+  // D - Capitalizamos toda la oración para asegurarnos que la primera palabra tiene su primera letra en mayúscula, sea cual sea la palabra
+  const titleCase = title
+    .toLowerCase()
+    .split(' ')
+    .map(word => (exceptions.includes(word) ? word : capitalize(word)))
+    .join(' ');
+
+  return capitalize(titleCase);
+};
+
+console.log(convertTitleCase('this is a nice title')); // This Is a Nice Title
+console.log(convertTitleCase('this is a LONG title but not too long')); // This Is a Long Title but Not Too Long
+console.log(convertTitleCase('and here is another title with an EXAMPLE')); // And Here Is Another Title with an Example
