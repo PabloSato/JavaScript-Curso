@@ -320,91 +320,102 @@ labelBalance.addEventListener('click', function () {
   const movementsUI2 = [...document.querySelectorAll('.movements__value')];
 });
 
-// -------------------------------------------------- THE SOME METHOD
-// console.log(movements);
-// console.log('------------ THE SOME METHOD ------------');
-// //Devuelve TRUE si encuentra alguna coincidencia a una CONDICIÓN
-// //Si queremos saber, por ejemplo, si hay algun movimiento sobre 0 en este array usamos el método some()
-// const anyDeposits = movements.some(mov => mov > 0); // Nos devuelve TRUE o FALSE
-// console.log(anyDeposits);
-// console.log('------------ THE INCLUDES METHOD ------------');
-// //Devuelve TRUE si encuentra alguna coincidencia exacta
-// const include = movements.includes(-130);
-// console.log(include);
-// console.log('------------ THE EVERY METHOD ------------');
-// console.log('------------ THE EVERY METHOD ------------');
-//Solo devuelve TRUE si TODOS los elementos del Array cumplen la condición que le pasamos
-// console.log(movements.every(mov => mov > 0)); //Devuelve FALSE
-// console.log(account4.movements.every(mov => mov > 0)); //Devuelve TRUE (esta cuenta solo tiene ingresos, asique todos los movimientos cumplen la condición)
+// -------------------------------------------------- PRACTICA METHODS
 
-//Separate Callback
+// 1. Cuánto dinero hay depositado en TOTAL en el banco (sumando el de todas las cuentas)
 
-// const deposit = mov => mov > 0;
-// console.log(movements.some(deposit));
-// console.log(movements.every(deposit));
-// console.log(movements.filter(deposit));
+// A - Usaremos el método map() ya que queremos crear un nuevo array a partir del array de accounts
+//      En ese nuevo array guardaremos los movimientos (que a su vez son arrays) de todas las cuentas (accounts.movements)
+// B - Para sacar los valores de esos arrays anidados y unirlos en el array padre, usaremos el método flat()
+const bankDepositSum0 = accounts.map(acc => acc.movements).flat();
+// C - Para simplificar el código, combinaremos A y B usando el método flatMap()
+// D - Como queremos sólo los valores positivos, usaremos el método filter() para filtrar el array
+// E - Para quedarnos con la suma total de todos los elementos que tenemos ahora en el arry usaremos el método reduce()
+//     Pasamos 2 valores a la funcion
+//      - sum : previousValue
+//      - cur: currentValue
+//       El 0 indica el valor inicial
+const bankDepositSum1 = accounts
+  .flatMap(acc => acc.movements)
+  .filter(mov => mov > 0)
+  .reduce((sum, cur) => sum + cur, 0); //La suma total es 25180;
 
-// console.log('------------ THE FLAT METHOD ------------');
-// // El método flat borra los arrays anidados y los "une" al array padre
-// // Por defecto solo baja un primer nivel (flat(1)), pero le podemos pasar por parámetros hasta dónde queremos que baje
-// const arr = [[1, 2, 3], [4, 5, 6], 7, 8];
-// console.log(arr.flat());
+console.log(bankDepositSum1);
 
-// const arrDeep = [[[1, 2], 3], [4, [5, 6]], 7, 8];
-// console.log(arrDeep.flat(2));
+// 2. Cuántos depósitos hay en el banco con al menos $1.000
 
-// const accountMovements = accounts.map(acc => acc.movements); //De esta forma podemos crear un array con los valores de otros arrays anidados
-// //console.log(accountMovements); // Un array de arrays con los movimientos
-// const allMovements = accountMovements.flat(); //Ahora tenemos en un único array todos los valores juntos
+// --- Primera Forma de Hacerlo ---
+// A - Usamos el método faltMap() para unir todos los movimientos en el mismo array
+// B - Filtramos (filter()) el array para quedarnos con todos los movimientos >= a 1000
+// C - Al querer solo la cantidad de depósitos, usamos length
+const numDeposits1000a = accounts
+  .flatMap(acc => acc.movements)
+  .filter(mov => mov >= 1000).length;
 
-// const overalBalance = allMovements.reduce((acc, mov) => acc + mov, 0); // Aplicando reduce conseguimos la suma de todos los valores
-// console.log(overalBalance); // 17840
-// //Vamos a unir todos los pasos anteriores en uno solo
-// const overalBalance2 = accounts
-//   .map(acc => acc.movements)
-//   .flat()
-//   .reduce((acc, mov) => acc + mov, 0);
-// console.log(overalBalance2); // 17840
+// --- Segunda Forma de Hacerlo ---
+// A - En este método usaremos el reduce() para que nos devuelva el acumulador
+const numDeposits1000b = accounts
+  .flatMap(acc => acc.movements)
+  .reduce((sum, cur) => (cur >= 1000 ? ++sum : sum), 0);
 
-// // console.log('------------ THE FLATMAP METHOD ------------');
-// // Combina los dos métodos (flat() y map()) en uno solo
-// // Mejor para la performance
-// // flatMap() solo puede bajar 1 nivel de profundidad, si necesitas bajar más hay que usar el flat()
+console.log(numDeposits1000b); // La cantidad de depósitos es 6;
 
-// const overalBalance3 = accounts
-//   .flatMap(acc => acc.movements)
-//   .reduce((acc, mov) => acc + mov, 0);
-// console.log(overalBalance3); // 17840
-// console.log('--------- SORTING ARRAYS ----------');
-// // Array Strings
-// const owners = ['Jonas', 'Zach', 'Adam', 'Martha'];
-// console.log(owners);
-// console.log(owners.sort()); //Ordena el array alfabéticamente por defecto (lo muta!!, modifica las posiciones)
-// console.log(owners);
+// 3. Crear un objeto que contenga la suma de los depósitos y la suma de las retiradas
 
-// //Numbers
-// console.log(movements);
-// //console.log(movements.sort()); // No lo ordena, lo convierte en Strings y lo ordena como si fueran Strings
-// // Para ordena de manera ASCENDENTE el array se hace asi
-// // a => currentValue
-// // b => nextValue
-// // Si devuelve < 0, lo ordena A, B
-// // Si devuelve > 0, lo ordena B, A
-// movements.sort((a, b) => {
-//   if (a > b) return 1;
+// A - En este caso el valor inicial no es 0, sino el objeto dónde vamos a guardar los sumatorios
+//      En este caso "sum" es lo mismo que el valor inicial, es decir, sum es igual al objeto
+//      Si el currentValue es mayor que cero lo sumas a depositos, sino (si es menor que cero) lo sumas a retiradas
+// B - Con reduce() se debe devolver siempre el valor, si no tiene {} (cuerpo de función) el método lo devuelve por defecto
+//      Pero en este caso si que tiene body, por lo que tenemos que devolver explicitamente
+const sums = accounts
+  .flatMap(acc => acc.movements)
+  .reduce(
+    (sum, cur) => {
+      cur > 0 ? (sum.deposits += cur) : (sum.withdrawals += cur);
+      return sum;
+    },
+    { deposits: 0, withdrawals: 0 }
+  );
+console.log(sums); // {deposits: 25180, withdrawals: -7340}
 
-//   if (b > a) return -1;
-// });
-// console.log(movements); // ASC
-// // Ordenamos de manera DESCENDENTE
-// movements.sort((a, b) => {
-//   if (a < b) return 1;
-//   if (a > b) return -1;
-// });
-// console.log(movements); // DESC
+// C - También podemos deconstruir el objeto y que nos devuelva dos variables con los datos
+const { deposits1, withdrawals1 } = accounts
+  .flatMap(acc => acc.movements)
+  .reduce(
+    (sum, cur) => {
+      // cur > 0 ? (sum.deposits1 += cur) : (sum.withdrawals1 += cur);
+      //Hay una forma más mimim de hacer esto mismo que es:
+      sum[cur > 0 ? 'deposits1' : 'withdrawals1'] += cur;
+      return sum;
+    },
+    { deposits1: 0, withdrawals1: 0 }
+  );
+console.log(deposits1); // 25180
+console.log(withdrawals1); // -7340
 
-// // Una forma MÁS SIMPLE
-// movements.sort((a, b) => a - b);
-// console.log(movements); // ASC
-// movements.sort((a, b) => b - a);
-// console.log(movements); // DESC
+// 4. Convertir cualquier String a Title Case (this is a nice title => This Is a Nice Title)
+
+const convertTitleCase = function (title) {
+  const capitalize = str => str[0].toUpperCase() + str.slice(1);
+
+  const exceptions = ['a', 'an', 'and', 'the', 'but', 'or', 'on', 'in', 'with'];
+
+  // A - Primero convertimos todo a lowerCase
+  // B - Separamos el string por palabras para trabajar con cada individualmente
+  // C - Comprobamos si la palabra está en el array de excepciones, si lo está no la tratamos
+  // D - Creamos un nuevo array con map() y capitalizamos la primera letra de cada palabra que no esté en exceptions
+  //(Necesitamos crear un nuevo array porque no podemos modificar el String?)
+  // E - Unimos todas las palabras en una oración
+  // D - Capitalizamos toda la oración para asegurarnos que la primera palabra tiene su primera letra en mayúscula, sea cual sea la palabra
+  const titleCase = title
+    .toLowerCase()
+    .split(' ')
+    .map(word => (exceptions.includes(word) ? word : capitalize(word)))
+    .join(' ');
+
+  return capitalize(titleCase);
+};
+
+console.log(convertTitleCase('this is a nice title')); // This Is a Nice Title
+console.log(convertTitleCase('this is a LONG title but not too long')); // This Is a Long Title but Not Too Long
+console.log(convertTitleCase('and here is another title with an EXAMPLE')); // And Here Is Another Title with an Example
