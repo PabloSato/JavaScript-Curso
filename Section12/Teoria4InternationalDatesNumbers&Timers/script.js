@@ -81,26 +81,32 @@ const inputClosePin = document.querySelector('.form__input--pin');
 /////////////////////////////////////////////////
 // Functions
 
-const formatMovementsDate = function (date) {
+const formatMovementsDate = function (date, locale) {
   // Usamos Math.abs para obtener el valor absoluto (no numeros negativos)
   // Usamos Math.round para redondear las fechas, no decimales
   const calcDaysPassed = (date1, date2) =>
     Math.round(Math.abs((date2 - date1) / (1000 * 60 * 60 * 24))); // milsec * min * hors * dias
 
   const daysPassed = calcDaysPassed(new Date(), date);
-  console.log(daysPassed);
 
   if (daysPassed === 0) return 'Today';
   if (daysPassed === 1) return 'Yesterday';
   if (daysPassed <= 7) return `${daysPassed} days ago`;
   else {
     //Solo si ha pasado más de una semana devolvemos la fecha
-    const day = `${date.getDate()}`.padStart(2, '0');
-    const month = `${date.getMonth() + 1}`.padStart(2, '0');
-    const year = date.getFullYear();
-
-    return `${day}/${month}/${year}`;
+    // const day = `${date.getDate()}`.padStart(2, '0');
+    // const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    // const year = date.getFullYear();
+    // return `${day}/${month}/${year}`;
+    return new Intl.DateTimeFormat(locale).format(date); // Damos formato internacional
   }
+};
+
+const formatCurrency = function (value, locale, currency) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+  }).format(value);
 };
 
 const displayMovements = function (acc, sort = false) {
@@ -115,7 +121,10 @@ const displayMovements = function (acc, sort = false) {
 
     // Para pintar las fechas de los movimientos
     const date = new Date(acc.movementsDates[i]);
-    const displayDate = formatMovementsDate(date);
+    const displayDate = formatMovementsDate(date, acc.locale);
+
+    //International Numbers
+    const formatedMov = formatCurrency(mov, acc.locale, acc.currency);
 
     // Pintamos el HTML
     const html = `
@@ -124,7 +133,7 @@ const displayMovements = function (acc, sort = false) {
       i + 1
     } ${type}</div>
         <div class="movements__date">${displayDate}</div>
-        <div class="movements__value">${mov.toFixed(2)}€</div>
+        <div class="movements__value">${formatedMov}</div>
       </div>
     `;
 
@@ -134,19 +143,27 @@ const displayMovements = function (acc, sort = false) {
 
 const calcDisplayBalance = function (acc) {
   acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
-  labelBalance.textContent = `${acc.balance.toFixed(2)}€`;
+  labelBalance.textContent = formatCurrency(
+    acc.balance,
+    acc.locale,
+    acc.currency
+  );
 };
 
 const calcDisplaySummary = function (acc) {
   const incomes = acc.movements
     .filter(mov => mov > 0)
     .reduce((acc, mov) => acc + mov, 0);
-  labelSumIn.textContent = `${incomes.toFixed(2)}€`;
+  labelSumIn.textContent = formatCurrency(incomes, acc.locale, acc.currency);
 
   const out = acc.movements
     .filter(mov => mov < 0)
     .reduce((acc, mov) => acc + mov, 0);
-  labelSumOut.textContent = `${Math.abs(out).toFixed(2)}€`;
+  labelSumOut.textContent = formatCurrency(
+    Math.abs(out),
+    acc.locale,
+    acc.currency
+  );
 
   const interest = acc.movements
     .filter(mov => mov > 0)
@@ -156,7 +173,11 @@ const calcDisplaySummary = function (acc) {
       return int >= 1;
     })
     .reduce((acc, int) => acc + int, 0);
-  labelSumInterest.textContent = `${interest.toFixed(2)}€`;
+  labelSumInterest.textContent = formatCurrency(
+    interest,
+    acc.locale,
+    acc.currency
+  );
 };
 
 const createUsernames = function (accs) {
@@ -183,12 +204,42 @@ const updateUI = function (acc) {
 
 ///////////////////////////////////////
 // Event handlers
-let currentAccount;
+let currentAccount, timer;
+
+// TIMER!!
+const startLogOutTimer = function () {
+  const tick = function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(Math.trunc(time % 60)).padStart(2, 0);
+
+    // In each call, print remaining time to UI
+    labelTimer.textContent = `${min}:${sec}`;
+
+    // When 0 seconds, stop timer and log out user
+    if (time === 0) {
+      clearInterval(timer);
+      labelWelcome.textContent = 'Log in to get started';
+      containerApp.style.opacity = 0;
+    }
+
+    //Decrese 1s
+    time--;
+  };
+  // Set time to 5 minutes
+  let time = 10;
+  // Call de timer every second
+  tick();
+  const timer = setInterval(tick, 1000);
+  return timer; //Devolvemos el timer para poder limpiarlo en el siguiente logueo
+};
 
 // ---------------- FAKE ALWAYS LOGGED IN ----------------
-currentAccount = account1;
-updateUI(currentAccount);
-containerApp.style.opacity = 100;
+// currentAccount = account1;
+// updateUI(currentAccount);
+// containerApp.style.opacity = 100;
+
+// JS API for Internationalization
+
 // ---------------- /FAKE ALWAYS LOGGED IN ----------------
 
 btnLogin.addEventListener('click', function (e) {
@@ -208,23 +259,38 @@ btnLogin.addEventListener('click', function (e) {
     containerApp.style.opacity = 100;
 
     // CREATE CURRENT DATE al loguear
-    const now = new Date(); // Cogemos el AHORA
-    // Damos el formato que queremos a la fecha ( day/month/year)
-    // const day = now.getDate();
-    // const month = now.getMonth() + 1;
-    // estos dos valores nos darían el mes y el día con un único dígito, para obtener dos digitos (poniendo un 0 delante) se haría así
-    const day = `${now.getDate()}`.padStart(2, '0'); // 2 digitos y añade 0
-    const month = `${now.getMonth() + 1}`.padStart(2, '0');
-    const year = now.getFullYear();
-    // Pasa lo mismo con la hora y los minutos
-    const hour = `${now.getHours()}`.padStart(2, '0');
-    const min = `${now.getMinutes()}`.padStart(2, '0');
-    //Con las variables preparadas, pintamos un String bonito
-    labelDate.textContent = `${day}/${month}/${year}, ${hour}:${min}`; // 18/07/2022, 9:39
+    // const now = new Date(); // Cogemos el AHORA
+    // const day = `${now.getDate()}`.padStart(2, '0'); // 2 digitos y añade 0
+    // const month = `${now.getMonth() + 1}`.padStart(2, '0');
+    // const year = now.getFullYear();
+    // const hour = `${now.getHours()}`.padStart(2, '0');
+    // const min = `${now.getMinutes()}`.padStart(2, '0');
+    // //Con las variables preparadas, pintamos un String bonito
+    // labelDate.textContent = `${day}/${month}/${year}, ${hour}:${min}`; // 18/07/2022, 9:39
+
+    const now = new Date();
+    const options = {
+      hour: 'numeric',
+      minute: 'numeric',
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+      // weekday: 'long',
+    };
+    // const locale = navigator.language; // => Para coger el local del navegador web del cliente
+
+    labelDate.textContent = new Intl.DateTimeFormat(
+      currentAccount.locale,
+      options
+    ).format(now);
 
     // Clear input fields
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
+
+    // Llamamos al Timer
+    if (timer) clearInterval(timer); // Limpiamos en el caso de que hubiese un timer ya activado
+    timer = startLogOutTimer();
 
     // Update UI
     updateUI(currentAccount);
@@ -255,6 +321,10 @@ btnTransfer.addEventListener('click', function (e) {
 
     // Update UI
     updateUI(currentAccount);
+
+    //Reset timer
+    clearInterval(timer);
+    timer = startLogOutTimer();
   }
 });
 
@@ -264,14 +334,20 @@ btnLoan.addEventListener('click', function (e) {
   const amount = Math.floor(inputLoanAmount.value); // Redondeamos hacia abajo el valor que pedimos prestado (no damos prestamos con decimales)
 
   if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
-    // Add movement
-    currentAccount.movements.push(amount);
+    setTimeout(function () {
+      // Add movement
+      currentAccount.movements.push(amount);
 
-    // Add Loan Date
-    currentAccount.movementsDates.push(new Date().toISOString());
+      // Add Loan Date
+      currentAccount.movementsDates.push(new Date().toISOString());
 
-    // Update UI
-    updateUI(currentAccount);
+      // Update UI
+      updateUI(currentAccount);
+
+      //Reset timer
+      clearInterval(timer);
+      timer = startLogOutTimer();
+    }, 2500);
   }
   inputLoanAmount.value = '';
 });
@@ -319,3 +395,5 @@ labelBalance.addEventListener('click', function () {
 });
 
 // --------------------- INTERNATIONALIZATION DATES ---------------------
+
+// --------------------- TIMERS ---------------------
