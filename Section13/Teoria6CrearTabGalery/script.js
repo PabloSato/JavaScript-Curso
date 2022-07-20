@@ -10,36 +10,6 @@ const section1 = document.querySelector('#section--1');
 
 const h1 = document.querySelector('h1');
 
-// //Seleccionamos hijos
-// console.log(h1.querySelectorAll('.highlight')); //Todos los nodos hijos con la misma clase
-// console.log(h1.childNodes); // Todos los nodos hijos
-// console.log(h1.children); // Todos los tags html que son hijos (directos)
-// h1.firstElementChild.style.color = 'white';
-// h1.lastElementChild.style.color = 'orangered';
-
-// // Seleccionamos padres
-// console.log(h1.parentNode); // El Nodo padre
-// console.log(h1.parentElement); // El Nodo padre
-
-// //El header MÁS CERCANO al nodo
-// h1.closest('.header').style.background = 'var(--gradient-secondary)';
-
-// // QuerySelector busca hijos (no importa lo profundo que busque dentro del nodo)
-// // Closest() busca padres (no importa todo lo que tenga que subir en el DOM)
-
-// // Seleccionamos hermanos
-// console.log(h1.previousElementSibling);
-// console.log(h1.nextElementSibling);
-
-// console.log(h1.previousSibling);
-// console.log(h1.nextSibling);
-
-// //Para buscar a TODOS los hermanos, subimos al padre y que busque hijos
-// console.log(h1.parentElement.children);
-// [...h1.parentElement.children].forEach(function (el) {
-//   if (el !== h1) el.style.transform = 'scale(0.5)';
-// });
-
 ///////////////////////////////////////
 // Modal window
 const openModal = function (e) {
@@ -82,4 +52,27 @@ document.querySelector('.nav__links').addEventListener('click', function (e) {
     const id = e.target.getAttribute('href');
     document.querySelector(id).scrollIntoView({ behavior: 'smooth' });
   }
+});
+
+// Tab Gallery
+const tabs = document.querySelectorAll('.operations__tab');
+const tabsContainer = document.querySelector('.operations__tab-container');
+const tabsContent = document.querySelectorAll('.operations__content');
+
+tabsContainer.addEventListener('click', function (e) {
+  const clicked = e.target.closest('.operations__tab'); // No importa si pinchas en él mismo o en el span que contiene, siempre elige el boton
+  //Ignoramos cualquier click que no sea en los botones
+  if (!clicked) return;
+
+  //Quitamos a todos los tabs la clase active
+  tabs.forEach(t => t.classList.remove('operations__tab--active'));
+  //Borramos la clase activa a todos los contenidos
+  tabsContent.forEach(c => c.classList.remove('operations__content--active'));
+
+  //Añadimos al tab que hemos pinchado la clase active
+  clicked.classList.add('operations__tab--active');
+  //Activamos el area del contenido
+  document
+    .querySelector(`.operations__content--${clicked.dataset.tab}`)
+    .classList.add('operations__content--active');
 });
