@@ -10,6 +10,11 @@ const section1 = document.querySelector('#section--1');
 
 const h1 = document.querySelector('h1');
 
+const tabs = document.querySelectorAll('.operations__tab');
+const tabsContainer = document.querySelector('.operations__tab-container');
+const tabsContent = document.querySelectorAll('.operations__content');
+
+const nav = document.querySelector('nav');
 ///////////////////////////////////////
 // Modal window
 const openModal = function (e) {
@@ -55,9 +60,6 @@ document.querySelector('.nav__links').addEventListener('click', function (e) {
 });
 
 // Tab Gallery
-const tabs = document.querySelectorAll('.operations__tab');
-const tabsContainer = document.querySelector('.operations__tab-container');
-const tabsContent = document.querySelectorAll('.operations__content');
 
 tabsContainer.addEventListener('click', function (e) {
   const clicked = e.target.closest('.operations__tab'); // No importa si pinchas en él mismo o en el span que contiene, siempre elige el boton
@@ -76,3 +78,56 @@ tabsContainer.addEventListener('click', function (e) {
     .querySelector(`.operations__content--${clicked.dataset.tab}`)
     .classList.add('operations__content--active');
 });
+
+// MENU FADE ANIMATION
+const handleHover = function (e) {
+  if (e.target.classList.contains('nav__link')) {
+    const link = e.target;
+    const siblings = link.closest('.nav').querySelectorAll('.nav__link');
+    const logo = link.closest('.nav').querySelector('img');
+
+    siblings.forEach(el => {
+      if (el !== link) el.style.opacity = this;
+    });
+    logo.style.opacity = this;
+  }
+};
+// Pasamos "argumentos" a un handler usando bind(argumento) con la función
+nav.addEventListener('mouseover', handleHover.bind(0.5));
+
+nav.addEventListener('mouseout', handleHover.bind(1));
+
+// Sticky Navigation
+
+// TODO ESTO ES UNA MIERDA ---
+//Determinamos la posición del inicio de la section1
+const initialCords = section1.getBoundingClientRect();
+//Una vez que llegamos a esas coordenadas, add sticky class
+// window.addEventListener('scroll', function (e) {
+//   if (this.window.scrollY > initialCords.top) {
+//     nav.classList.add('sticky');
+//   } else {
+//     nav.classList.remove('sticky');
+//   }
+// });
+// SE HACE ASI JODER ---
+
+const header = document.querySelector('.header');
+const navHeight = nav.getBoundingClientRect().height;
+
+const stickyNav = function (entries) {
+  const [entry] = entries; // =>deconstruimos el array de entries, es lo mismo que poner const entry = entries[0]
+
+  if (!entry.isIntersecting) {
+    nav.classList.add('sticky');
+  } else {
+    nav.classList.remove('sticky');
+  }
+};
+
+const headerObserver = new IntersectionObserver(stickyNav, {
+  root: null,
+  threshold: 0, // Cuando no se vea nada del header, que salte el sticky
+  rootMargin: `-${navHeight}px`, // Queremos que lance el sticky elTamañodelHeader antes de que termine de desaparecer el header
+});
+headerObserver.observe(header);
