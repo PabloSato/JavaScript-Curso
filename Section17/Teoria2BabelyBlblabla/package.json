@@ -1,0 +1,20 @@
+{
+  "name": "teoria1-section17",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html"
+  },
+  "author": "Pablo Fernández Sato",
+  "license": "ISC",
+  "dependencies": {
+    "core-js": "^3.24.1",
+    "leaflet": "^1.8.0",
+    "lodash-es": "^4.17.21",
+    "regenerator-runtime": "^0.13.9"
+  },
+  "devDependencies": {
+    "parcel": "^2.7.0"
+  }
+}
