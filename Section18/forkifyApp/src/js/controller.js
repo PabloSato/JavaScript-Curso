@@ -1,8 +1,14 @@
 import * as model from './model.js';
 import recipeView from './views/recipeView.js';
+import searchView from './views/searchView.js';
+import resultsView from './views/resultsView.js';
 
 import 'core-js/stable'; // Polifying everything else
 import 'regenerator-runtime/runtime'; // Polifying async/await
+
+if (module.hot) {
+  module.hot.accept(); // => esto viene de parcel
+}
 
 const recipeContainer = document.querySelector('.recipe');
 
@@ -30,7 +36,23 @@ const controlRecipes = async function () {
   }
 };
 
-controlRecipes();
+const controlSearchResults = async function () {
+  try {
+    resultsView.renderSpinner();
+    // 1 .- Obtenemos la Query
+    const query = searchView.getQuery();
+    if (!query) return;
+
+    // 2 .- Cargamos los resultados de la búsqueda
+    await model.loadSearchResults(query);
+
+    // 3 .- Renderizamos los resultados
+    resultsView.render(model.state.search.results);
+    console.log(model.state.search.results);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 //LLAMADAS DEL MÉTODO controlRecipes
 //haschange => Cuando pulsamos en los enlaces de la izq, cambia el hash (codigo #:id)
@@ -46,6 +68,7 @@ controlRecipes();
 
 const init = function () {
   recipeView.addHandlerRender(controlRecipes);
+  searchView.addHandlerSearch(controlSearchResults);
 };
 
 init(); //=> esta es la llamada de la función que s eejcuta al inicio del todo
