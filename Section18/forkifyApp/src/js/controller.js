@@ -6,13 +6,6 @@ import 'regenerator-runtime/runtime'; // Polifying async/await
 
 const recipeContainer = document.querySelector('.recipe');
 
-const timeout = function (s) {
-  return new Promise(function (_, reject) {
-    setTimeout(function () {
-      reject(new Error(`Request took too long! Timeout after ${s} second`));
-    }, s * 1000);
-  });
-};
 //API de BBDD con recetas
 // https://forkify-api.herokuapp.com/v2
 
@@ -33,7 +26,7 @@ const controlRecipes = async function () {
     // 3 .- Rendering Recipe
     recipeView.render(model.state.recipe);
   } catch (err) {
-    alert(err);
+    recipeView.renderError();
   }
 };
 
@@ -43,10 +36,16 @@ controlRecipes();
 //haschange => Cuando pulsamos en los enlaces de la izq, cambia el hash (codigo #:id)
 //por cada cambio llamamos al método controlRecipes que renderiza la Receta
 //load => Llamamos al método controlRecipes cuando se carga la pagina
-['hashchange', 'load'].forEach(ev =>
-  window.addEventListener(ev, controlRecipes)
-);
+// ['hashchange', 'load'].forEach(ev =>
+//   window.addEventListener(ev, controlRecipes)
+// );// => NOS LO LLEVAMOS AL VIEW
 
 //Esto es lo mismo que lo anterior
 // window.addEventListener('hashchange', controlRecipes);
 // window.addEventListener('load', controlRecipes);
+
+const init = function () {
+  recipeView.addHandlerRender(controlRecipes);
+};
+
+init(); //=> esta es la llamada de la función que s eejcuta al inicio del todo
