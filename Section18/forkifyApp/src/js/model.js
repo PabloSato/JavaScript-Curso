@@ -1,5 +1,5 @@
 import { async } from 'regenerator-runtime';
-import { API_URL } from './config.js';
+import { API_URL, RES_PER_PAGE } from './config.js';
 import { getJSON } from './helpers.js';
 
 export const state = {
@@ -7,6 +7,8 @@ export const state = {
   search: {
     query: '',
     results: [],
+    page: 1,
+    resultsPerPage: RES_PER_PAGE,
   },
 };
 
@@ -27,7 +29,6 @@ export const loadRecipe = async function (id) {
       cookingTime: recipe.cooking_time,
       ingredients: recipe.ingredients,
     };
-    console.log(state.recipe);
   } catch (err) {
     //Temp error handler
     console.error(`${err}!!`);
@@ -55,4 +56,15 @@ export const loadSearchResults = async function (query) {
     throw err;
   }
 };
-loadSearchResults('pizza');
+
+export const getSearchResultsPage = function (page = state.search.page) {
+  state.search.page = page;
+
+  const start = (page - 1) * state.search.resultsPerPage; //0; => cogemos la pagina que nos llega, le restamos uno y la multiplicamos por la cantidad de resultdos que queremos que aparezcan
+  const end = page * state.search.resultsPerPage; //9; => cogemos la pagina y la multiplicamos por la cantidad de resultados que queremos que nos devuelva
+
+  // start = 0; => 1 - 1 = 0, 0 * 10 = 0
+  //end = 10; 1 * 10 = 10 // nos daría del 0 al 10 resultado
+
+  return state.search.results.slice(start, end);
+};
