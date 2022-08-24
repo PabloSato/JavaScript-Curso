@@ -6,6 +6,8 @@ class RecipeView {
   //Propiedades Privadas
   #parentElement = document.querySelector('.recipe');
   #data;
+  #errorMessage = 'We could not find that recipe. Please try another one!';
+  #message = '';
 
   /**Método que renderiza el componente html con los datos  */
   render(data) {
@@ -18,8 +20,8 @@ class RecipeView {
   #clear() {
     this.#parentElement.innerHTML = '';
   }
-
-  renderSpinner = function () {
+  /**Método que renderiza un Spinner en el DOM */
+  renderSpinner() {
     const markup = `
           <div class="spinner">
             <svg>
@@ -27,9 +29,44 @@ class RecipeView {
             </svg>
           </div>
     `;
-    this.#parentElement.innerHTML = '';
+    this.#clear();
     this.#parentElement.insertAdjacentHTML('afterbegin', markup);
-  };
+  }
+  //**Método para el handler de errores en el DOM */
+  renderError(message = this.#errorMessage) {
+    const markup = `
+      <div class="error">
+        <div>
+          <svg>
+            <use href="${icons}#icon-alert-triangle"></use>
+          </svg>
+        </div>
+        <p>${message}</p>
+      </div> 
+  `;
+    this.#clear();
+    this.#parentElement.insertAdjacentHTML('afterbegin', markup);
+  }
+
+  /**Método que sirve para renderizar mensajes en el DOM */
+  renderMessage(message = this.#message) {
+    const markup = `
+      <div class="message">
+        <div>
+          <svg>
+            <use href="${icons}#icon-smile"></use>
+          </svg>
+        </div>
+        <p>${message}</p>
+      </div> 
+  `;
+    this.#clear();
+    this.#parentElement.insertAdjacentHTML('afterbegin', markup);
+  }
+
+  addHandlerRender(handler) {
+    ['hashchange', 'load'].forEach(ev => window.addEventListener(ev, handler));
+  }
 
   //Método privado
   /**Método que genera un componente html de receta */
