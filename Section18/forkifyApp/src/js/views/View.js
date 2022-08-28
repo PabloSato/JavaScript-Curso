@@ -16,6 +16,36 @@ export default class View {
     this._clear();
     this._parentElement.insertAdjacentHTML('afterbegin', markup);
   }
+  /**Método que actualiza solo la parte que queremos del DOM */
+  update(data) {
+    this._data = data;
+    //Creamos un nuevo markup para comparar con el que tenemos en la web
+    const newMarkup = this._generateMarkup();
+    //Para poder compararlo, lo tenemos que transformar primero en un objeto DOM
+    const newDOM = document.createRange().createContextualFragment(newMarkup);
+    //Guardamos en Arrays tanto el nuevo objeto DOM, como el que ya tenemos desplegado
+    const newElements = Array.from(newDOM.querySelectorAll('*'));
+    const curElements = Array.from(this._parentElement.querySelectorAll('*'));
+    //Comparamos los dos arrays para buscar las diferencias
+    newElements.forEach((newEl, i) => {
+      const curEl = curElements[i];
+      //Si son distintos los nodos AND contienen texto
+      //Cambiamos el texto
+      if (
+        !newEl.isEqualNode(curEl) &&
+        newEl.firstChild.nodeValue.trim() !== ''
+      ) {
+        curEl.textContent = newEl.textContent;
+      }
+      //Update los atributos
+      if (!newEl.isEqualNode(curEl)) {
+        Array.from(newEl.attributes).forEach(attr =>
+          curEl.setAttribute(attr.name, attr.value)
+        );
+      }
+    });
+  }
+
   /**Método que limpia un componente html */
   _clear() {
     this._parentElement.innerHTML = '';

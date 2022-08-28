@@ -27,6 +27,9 @@ const controlRecipes = async function () {
 
     recipeView.renderSpinner();
 
+    //1.5 .- Update results view to mark selected search result
+    resultsView.update(model.getSearchResultsPage());
+
     // 2 .- Loading Recipe
     await model.loadRecipe(id); // => async. No devuelve nada, por eso no la guardamos
 
@@ -77,8 +80,17 @@ const controlPagination = function (goToPage) {
 // window.addEventListener('hashchange', controlRecipes);
 // window.addEventListener('load', controlRecipes);
 
+const controlServings = function (newServings) {
+  //Update the recipe servings (in state)
+  model.updateServings(newServings);
+  //Update the recipe view
+  // recipeView.render(model.state.recipe);
+  recipeView.update(model.state.recipe);
+};
+
 const init = function () {
   recipeView.addHandlerRender(controlRecipes);
+  recipeView.addHandlerUpdateServings(controlServings);
   searchView.addHandlerSearch(controlSearchResults);
   paginationView.addHandlerClick(controlPagination);
 };
