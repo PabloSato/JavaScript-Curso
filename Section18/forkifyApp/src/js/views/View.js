@@ -6,12 +6,14 @@ export default class View {
   _data;
 
   /**Método que renderiza el componente html con los datos  */
-  render(data) {
+  render(data, render = true) {
     if (!data || (Array.isArray(data) && data.length === 0))
       return this.renderError();
 
     this._data = data;
     const markup = this._generateMarkup();
+
+    if (!render) return markup;
 
     this._clear();
     this._parentElement.insertAdjacentHTML('afterbegin', markup);
@@ -33,8 +35,9 @@ export default class View {
       //Cambiamos el texto
       if (
         !newEl.isEqualNode(curEl) &&
-        newEl.firstChild.nodeValue.trim() !== ''
+        newEl.firstChild?.nodeValue.trim() !== ''
       ) {
+        //Hemos añadido el optional chaining (? en firstChild) para que en caso de que nohaya hijos no se vuelva loco
         curEl.textContent = newEl.textContent;
       }
       //Update los atributos
